@@ -129,8 +129,10 @@ class JpaSmokeTest {
         // une deuxieme reponse a la MEME question doit etre rejetee.
         tx.begin();
         Reponse doublon = new Reponse(joueur, question, bonneReponse, 5000, true, 100);
-        em.persist(doublon);
-        assertThrows(Exception.class, tx::commit);
+        assertThrows(Exception.class, () -> {
+            em.persist(doublon);
+            tx.commit();
+        });
     }
 
     /** Meme formule que celle documentee dans la conception (QuizRunnerService). */

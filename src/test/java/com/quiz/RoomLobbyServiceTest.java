@@ -16,6 +16,7 @@ public class RoomLobbyServiceTest {
 
     private static EntityManagerFactory  emf;
     private EntityManager em;
+    private EntityTransaction tx;
     private final RoomLobbyService service = new RoomLobbyService();
 
     @BeforeAll
@@ -30,6 +31,7 @@ public class RoomLobbyServiceTest {
     @BeforeEach
     void ouvrirEntityManager(){
         em = emf.createEntityManager();
+        tx = em.getTransaction();
     }
     @AfterEach
     void fermerEntityManager(){
@@ -43,7 +45,6 @@ public class RoomLobbyServiceTest {
         .setMaxResults(1)
         .getSingleResult();
 
-        EntityTransaction tx =em.getTransaction();
         tx.begin();
         Room room = new Room("ABC123", quiz);// quiz et ty le nalaina teo ambony mba hahafeno ny critere creation room oe code + quiz 
         em.persist(room);
@@ -61,6 +62,32 @@ public class RoomLobbyServiceTest {
         assertFalse(participant.isEstHost());
         assertTrue(participant.isEstJoueur());
         assertNotNull(participant.getId());
+    }
+
+    @Test
+    void rejoindreUnCodeInexistantLeveUneException (){
+        tx.begin();
+        assertThrows(RoomLobbyService.RoomIntrouvableException.class,
+            () -> service.rejoindreRoom(em, "INCONNUE", "Alice"));
+            tx.rollback();
+    }
+    @Test
+    void rejoindreUneRoomDejaDemarrerEstRefuser (){
+        Quiz quiz  = em.createQuery("SELECT q FROM Quiz q", Quiz.class)
+            .setMaxResults(1)
+            .getSingleResult();
+
+        tx.begin();
+        Room room =new Room("STARTED", quiz);
+        room.setStatut(StatutRoom.EN_COURS);
+        em.persist(room);
+        tx.commit();
+
+        tx.begin();
+        assertThrows(RoomLobbyService.RoomNonRejoignableException.class,
+            () -> service.rejoindreRoom(em, "STARTED", "Eddys")
+        );
+        tx.rollback();
     }
 }
 

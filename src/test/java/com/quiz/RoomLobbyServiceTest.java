@@ -38,7 +38,29 @@ public class RoomLobbyServiceTest {
 
     @Test
     void unJoueurPeutRejoindreUneRoomEnAttente(){
-        // Apiko aveo fa valaka be 
+        //preparer situation de deart , Room efa misy
+        Quiz quiz = em.createQuery("SELECT q FROM Quiz q ", Quiz.class)// ty zan maka quiz fotsiny anaty base , on vas seulement utiliser son exisatnce
+        .setMaxResults(1)
+        .getSingleResult();
+
+        EntityTransaction tx =em.getTransaction();
+        tx.begin();
+        Room room = new Room("ABC123", quiz);// quiz et ty le nalaina teo ambony mba hahafeno ny critere creation room oe code + quiz 
+        em.persist(room);
+        tx.commit();
+
+        // atsoina le transaction commme un vrai appelant
+
+        tx.begin();
+        Participant participant = service.rejoindreRoom(em, "ABC123", "Bob" );//on appele la methode rejoindreRoom , elle vas chercher la room , et on creer Boob
+        tx.commit();
+
+        //verification raha corecte
+
+        assertEquals("Bob", participant.getPseudo());
+        assertFalse(participant.isEstHost());
+        assertTrue(participant.isEstJoueur());
+        assertNotNull(participant.getId());
     }
 }
 

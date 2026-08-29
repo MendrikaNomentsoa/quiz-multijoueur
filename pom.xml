@@ -13,27 +13,50 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <jakarta.persistence.version>3.1.0</jakarta.persistence.version>
-        <hibernate.version>6.4.4.Final</hibernate.version>
+
+        <!-- Version du serveur d'application cible : WildFly EE 10 (variante qui
+             conserve les specifications Jakarta EE 10, cf. wildfly.org).
+             Le BOM importe ci-dessous aligne automatiquement les versions
+             de Hibernate/Jakarta Persistence sur exactement ce que fournit
+             ce serveur, pour eviter toute incompatibilite au deploiement. -->
+        <wildfly.ee.version>41.0.1.Final</wildfly.ee.version>
+
         <h2.version>2.2.224</h2.version>
         <junit.version>5.10.2</junit.version>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <!-- BOM WildFly EE 10 : impose les memes versions de Jakarta Persistence,
+                 Hibernate, EJB, etc. que celles reellement presentes sur le serveur.
+                 On evite ainsi de declarer nous-memes des versions qui pourraient
+                 differer de celles du serveur au moment du deploiement. -->
+            <dependency>
+                <groupId>org.wildfly.bom</groupId>
+                <artifactId>wildfly-ee-with-tools</artifactId>
+                <version>${wildfly.ee.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
-        <!-- Specification JPA (utilisee par les entites @Entity, EntityManager, etc.) -->
+        <!-- Specification JPA (utilisee par les entites @Entity, EntityManager, etc.).
+             Version geree par le BOM WildFly ci-dessus. -->
         <dependency>
             <groupId>jakarta.persistence</groupId>
             <artifactId>jakarta.persistence-api</artifactId>
-            <version>${jakarta.persistence.version}</version>
         </dependency>
 
         <!-- Implementation JPA : Hibernate.
-             Sur le serveur d'application final (WildFly / Payara), cette dependance
-             est deja fournie par le serveur -> passer en scope "provided" a ce moment-la. -->
+             scope=provided : WildFly fournit deja Hibernate sur le serveur,
+             inutile (et risque de conflit) de l'embarquer dans notre .war.
+             Reste disponible en compilation et pour "mvn test" en local. -->
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-core</artifactId>
-            <version>${hibernate.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Base de donnees H2 en memoire : sert uniquement au developpement/tests locaux,
@@ -61,6 +84,16 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
             </plugin>
+
+            <!-- A activer quand le projet passera en packaging "war" pour le
+                 deploiement reel sur WildFly (voir README) :
+
+            <plugin>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
+                <version>4.2.2.Final</version>
+            </plugin>
+            -->
         </plugins>
     </build>
 </project>

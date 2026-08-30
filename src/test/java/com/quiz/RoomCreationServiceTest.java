@@ -10,7 +10,7 @@ import org.junit.jupiter.api.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class RoomCreationServiceTest {
+public class RoomCreationServiceTest {
 
     private static EntityManagerFactory emf;
     private EntityManager em;

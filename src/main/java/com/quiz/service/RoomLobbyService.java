@@ -8,6 +8,16 @@ import jakarta.persistence.EntityManager;
 
 public class RoomLobbyService {
 
+    private final RoomEventPublisher eventPublisher;
+
+    public RoomLobbyService(){
+        this(new NoOpRoomEventPublisher());
+    }
+    public RoomLobbyService(RoomEventPublisher eventPublisher){
+        this.eventPublisher = eventPublisher;
+
+    }
+
     public Participant rejoindreRoom (EntityManager em, String code, String pseudo){
         Room room;
         try {
@@ -23,8 +33,11 @@ public class RoomLobbyService {
         room.ajouterParticipant(participant);
         em.persist(participant);
 
+        eventPublisher.publierParticipantRejoint(room, participant);
+
         return participant;
     }
+
     public static class RoomIntrouvableException extends RuntimeException{
         public RoomIntrouvableException(String message){
             super(message);

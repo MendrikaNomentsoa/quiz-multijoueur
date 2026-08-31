@@ -6,8 +6,26 @@ import jakarta.persistence.LockModeType;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class QuizRunnerService {
+
+    private final RoomEventPublisher eventPublisher;
+    private final ScoreService scoreService;
+
+    /** Constructeur par defaut : aucune notification reelle, utilise pour les tests existants. */
+    public QuizRunnerService() {
+        this(new NoOpRoomEventPublisher(), new ScoreService());
+    }
+
+    public QuizRunnerService(RoomEventPublisher eventPublisher) {
+        this(eventPublisher, new ScoreService());
+    }
+
+    public QuizRunnerService(RoomEventPublisher eventPublisher, ScoreService scoreService) {
+        this.eventPublisher = eventPublisher;
+        this.scoreService = scoreService;
+    }
 
     public Question lancerQuestionSuivante(EntityManager em, Long roomId) {
         Room room = em.find(Room.class, roomId);
@@ -22,6 +40,8 @@ public class QuizRunnerService {
 
         room.setStatut(StatutRoom.EN_COURS);
         room.setTimestampDebutQuestion(LocalDateTime.now());
+
+        eventPublisher.publierNouvelleQuestion(room, question);
 
         return question;
     }
@@ -59,24 +79,35 @@ public class QuizRunnerService {
 
         participant.ajouterPoints(points);
 
+        eventPublisher.publierScoreMisAJour(room, participant);
+
         return points;
     }
 
+    /**
+     * Cloture la question courante, diffuse le classement intermediaire,
+     * puis passe a la question suivante (ou termine la partie si c'etait la derniere).
+     */
     public Question passerQuestionSuivante(EntityManager em, Long roomId) {
         Room room = em.find(Room.class, roomId);
         if (room == null) {
             throw new RoomIntrouvableException("Aucune room avec l'ID " + roomId);
         }
 
+        List<Participant> classement = scoreService.calculerClassement(em, roomId);
+        eventPublisher.publierClassementMisAJour(room, classement);
+
         room.setQuestionCourante(room.getQuestionCourante() + 1);
         Question suivante = room.getQuestionActive();
 
         if (suivante == null) {
             room.setStatut(StatutRoom.TERMINEE);
+            eventPublisher.publierFinPartie(room, classement);
             return null;
         }
 
         room.setTimestampDebutQuestion(LocalDateTime.now());
+        eventPublisher.publierNouvelleQuestion(room, suivante);
         return suivante;
     }
 

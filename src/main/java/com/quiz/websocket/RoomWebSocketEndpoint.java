@@ -20,7 +20,7 @@ import jakarta.websocket.server.ServerEndpoint;
  *
  */
 
-@ServerEndpoint("ws/room/{code}")
+@ServerEndpoint("/ws/room/{code}")
 public class RoomWebSocketEndpoint {
 
     @Inject

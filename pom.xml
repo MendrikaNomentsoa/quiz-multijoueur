@@ -7,7 +7,7 @@
     <groupId>com.quiz</groupId>
     <artifactId>quiz-multijoueur</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>war</packaging>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -112,7 +112,7 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>${h2.version}</version>
-            <scope>test</scope>
+            
         </dependency>
 
         <dependency>
@@ -132,25 +132,62 @@
      <scope>provided</scope>
 </dependency>
 
+<!-- Contient le package de base jakarta.websocket (Session, @OnOpen, @OnClose...),
+     partage entre client et serveur -->
+<dependency>
+    <groupId>jakarta.websocket</groupId>
+    <artifactId>jakarta.websocket-client-api</artifactId>
+    <version>2.1.1</version>
+    <scope>provided</scope>
+</dependency>
+
+<!-- API REST (JAX-RS), fournie par WildFly (RESTEasy) -->
+<dependency>
+    <groupId>jakarta.ws.rs</groupId>
+    <artifactId>jakarta.ws.rs-api</artifactId>
+    <scope>provided</scope>
+</dependency>
+
     </dependencies>
 
     <build>
+        <finalName>quiz</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
             </plugin>
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-war-plugin</artifactId>
+    <configuration>
+        <failOnMissingWebXml>false</failOnMissingWebXml>
+    </configuration>
+</plugin>
 
-            <!-- A activer quand le projet passera en packaging "war" pour le
-                 deploiement reel sur WildFly (voir README) :
+<plugin>
+    <groupId>org.wildfly.plugins</groupId>
+    <artifactId>wildfly-maven-plugin</artifactId>
+    <version>5.1.5.Final</version>
+    <configuration>
+        <feature-packs>
+            <feature-pack>
+                <groupId>org.wildfly</groupId>
+                <artifactId>wildfly-ee-galleon-pack</artifactId>
+                <version>${wildfly.ee.version}</version>
+            </feature-pack>
+        </feature-packs>
+    </configuration>
+    <executions>
+        <execution>
+            <goals>
+                <goal>package</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
 
-            <plugin>
-                <groupId>org.wildfly.plugins</groupId>
-                <artifactId>wildfly-maven-plugin</artifactId>
-                <version>4.2.2.Final</version>
-            </plugin>
-            -->
         </plugins>
     </build>
 </project>

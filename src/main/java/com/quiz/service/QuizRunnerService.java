@@ -2,7 +2,6 @@ package com.quiz.service;
 
 import com.quiz.model.*;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.LockModeType;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -47,7 +46,7 @@ public class QuizRunnerService {
     }
 
     public int soumettreReponse(EntityManager em, Long participantId, Long questionId, Long choixId) {
-        Participant participant = em.find(Participant.class, participantId, LockModeType.OPTIMISTIC);
+        Participant participant = em.find(Participant.class, participantId);
         if (participant == null) {
             throw new ParticipantIntrouvableException("Aucun participant avec l'ID " + participantId);
         }

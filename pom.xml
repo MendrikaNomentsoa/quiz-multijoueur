@@ -161,6 +161,7 @@
 <plugin>
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-war-plugin</artifactId>
+    <version>3.4.0</version>
     <configuration>
         <failOnMissingWebXml>false</failOnMissingWebXml>
     </configuration>
@@ -178,6 +179,11 @@
                 <version>${wildfly.ee.version}</version>
             </feature-pack>
         </feature-packs>
+          <execute-commands>
+            <commands>
+                <command>data-source add --name=QuizDS --jndi-name=java:/jboss/datasources/QuizDS --driver-name=h2 --connection-url=jdbc:h2:mem:quizdb;DB_CLOSE_DELAY=-1 --user-name=sa --password=sa --jta=true --use-ccm=true --enabled=true</command>
+            </commands>
+        </execute-commands>
     </configuration>
     <executions>
         <execution>

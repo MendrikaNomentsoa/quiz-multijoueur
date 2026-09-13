@@ -6,8 +6,10 @@ import com.quiz.rest.dto.CreerRoomRequest;
 import com.quiz.rest.dto.ParticipantDto;
 import com.quiz.rest.dto.RejoindreRoomRequest;
 import com.quiz.rest.dto.RoomDto;
+import com.quiz.service.JmsRoomEventPublisher;
 import com.quiz.service.RoomCreationService;
 import com.quiz.service.RoomLobbyService;
+
 
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -24,11 +26,14 @@ public class RoomResource {
     @Inject 
     private EntityManager em;
 
+    @Inject
+    private JmsRoomEventPublisher jmsRoomEventPublisher;
+
     // NoOpRoomEventPublisher par defaut : a remplacer par JmsRoomEventPublisher
     // quand l'injection CDI de JMSContext sera disponible sur cette ressource.
 
     private final RoomCreationService roomCreationService = new RoomCreationService();
-    private final RoomLobbyService roomLobbyService = new RoomLobbyService();
+    
 
     @POST
     public Response creerRoom(CreerRoomRequest requete){
@@ -56,7 +61,7 @@ public class RoomResource {
         EntityTransaction tx = em.getTransaction();
         tx.begin();
         try {
-            Participant participant = roomLobbyService.rejoindreRoom(em, code, requete.pseudo);
+            Participant participant = new RoomLobbyService(jmsRoomEventPublisher).rejoindreRoom(em, code, requete.pseudo);
             tx.commit();
             return Response.status(Response.Status.CREATED)
                     .entity(ParticipantDto.depuis(participant))

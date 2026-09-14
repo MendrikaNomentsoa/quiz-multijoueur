@@ -1,6 +1,8 @@
 package com.quiz.websocket;
 
+import jakarta.annotation.Resource;
 import jakarta.inject.Inject;
+import jakarta.jms.ConnectionFactory;
 import jakarta.jms.JMSConsumer;
 import jakarta.jms.JMSContext;
 import jakarta.jms.Topic;
@@ -15,17 +17,18 @@ import jakarta.websocket.server.ServerEndpoint;
  * Passerelle WebSocket <-> JMS
  *
  * Chaque client React se connecte a une URL du type /ws/room/AB12CD.
- * A l'ouverture, on s'abonne directement au topic JMS de CETTE room
- * (room.AB12CD), puisque les topics sont crees dynamiquement par room
- *
+ *On cree notre propre JMSContext (via la ConnectionFactory injectee)
+ * car le JMSContext injecte (@Inject) est RequestScoped et n'existe
+ * PAS dans @OnOpen (hors requete HTTP).
  */
 
 @ServerEndpoint("/ws/room/{code}")
 public class RoomWebSocketEndpoint {
 
-    @Inject
+    @Resource(lookup = "java:/JmsXA")
+    private ConnectionFactory connectionFactory;
+   
     private JMSContext context;
-
     private JMSConsumer consumer;
 
     @OnOpen

@@ -5,6 +5,7 @@ import com.quiz.rest.dto.QuestionDto;
 import com.quiz.rest.dto.ReponseResultDto;
 import com.quiz.rest.dto.SoumettreReponseRequest;
 import com.quiz.service.QuizRunnerService;
+import com.quiz.service.JmsRoomEventPublisher;
 
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -18,6 +19,8 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.annotation.PostConstruct;
+
 
 
 @Path ("/room")
@@ -28,7 +31,15 @@ public class GameResource {
     @Inject 
     private EntityManager em;
 
-    private final QuizRunnerService quizRunnerService = new QuizRunnerService();
+    @Inject
+    private JmsRoomEventPublisher jmsRoomEventPublisher;
+    
+    private QuizRunnerService quizRunnerService;
+
+    @PostConstruct
+    public void init(){
+        this.quizRunnerService = new QuizRunnerService(jmsRoomEventPublisher);
+    }
 
 
     @POST 

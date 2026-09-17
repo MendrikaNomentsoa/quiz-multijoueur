@@ -22,7 +22,7 @@ import jakarta.websocket.server.ServerEndpoint;
 @ServerEndpoint("/ws/room/{code}")
 public class RoomWebSocketEndpoint {
 
-    @Resource(lookup = "java:/ConnectionFactory")
+    @Resource(lookup = "java:/JmsXA")
     private ConnectionFactory connectionFactory;
 
     private JMSContext context;
@@ -30,10 +30,9 @@ public class RoomWebSocketEndpoint {
 
     @OnOpen
     public void onOpen(Session session, @PathParam("code") String code) {
-        context = connectionFactory.createContext();
-
-        Topic topicDeLaRoom = context.createTopic("room." + code);
-        consumer = context.createConsumer(topicDeLaRoom);
+        this.context = connectionFactory.createContext();
+        Topic topicDeLaRoom = context.createTopic("room." +code);
+        this.consumer = context.createConsumer(topicDeLaRoom);
 
         consumer.setMessageListener(message -> {
             try {
